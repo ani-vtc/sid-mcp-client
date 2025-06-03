@@ -6,10 +6,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import { GoogleAuth } from 'google-auth-library';
 
 import { Anthropic } from '@anthropic-ai/sdk';
 
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { z } from "zod";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 dotenv.config();
@@ -30,6 +31,14 @@ class MCPClient {
       name: "SID-Client",
       version: "1.0.0",
     });
+    
+    // Initialize Google Auth with default credentials
+    // This will automatically use:
+    // - Workload Identity when running on Cloud Run
+    // - Service account JSON when running locally (if GOOGLE_APPLICATION_CREDENTIALS is set)
+    this.googleAuth = new GoogleAuth({
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+    });
   }
   async cleanup() {
     if (this.transport) {
@@ -38,35 +47,67 @@ class MCPClient {
   }
   async connectToServer(serverScriptPath) {
     try {
-      const isJs = serverScriptPath.endsWith(".js");
-      const isPy = serverScriptPath.endsWith(".py");
-      if (!isJs && !isPy) {
-        throw new Error("Server script must be a .js or .py file");
+      if (process.env.ENV == "dev") {
+        const isJs = serverScriptPath.endsWith(".js");
+        const isPy = serverScriptPath.endsWith(".py");
+        if (!isJs && !isPy) {
+          throw new Error("Server script must be a .js or .py file");
+        }
+        const command = isPy
+          ? process.platform === "win32"
+            ? "python"
+            : "python3"
+          : process.execPath;
+    
+        this.transport = new StdioClientTransport({
+          command,
+          args: [serverScriptPath],
+        });
+        this.mcp.connect(this.transport);
+    
+        const toolsResult = await this.mcp.listTools();
+        this.tools = toolsResult.tools.map((tool) => {
+          return {
+            name: tool.name,
+            description: tool.description,
+            input_schema: tool.inputSchema,
+          };
+        });
+        console.log(
+          "Connected to server with tools:",
+          this.tools.map(({ name }) => name)
+        );
+      } else {
+        // Get Google Cloud credentials
+        // This will automatically use the appropriate authentication method:
+        // - On Cloud Run: Uses the service account attached to the Cloud Run service
+        // - Locally: Uses GOOGLE_APPLICATION_CREDENTIALS if set
+        const client = await this.googleAuth.getClient();
+        const token = await client.getAccessToken();
+
+        this.transport = new StreamableHTTPClientTransport({
+          url: process.env.MCP_SERVER_URL,
+          opts: {
+            headers: {
+              'Authorization': `Bearer ${token.token}`,
+            },
+          },
+        });
+        await this.mcp.connect(this.transport);
+
+        const toolsResult = await this.mcp.listTools();
+        this.tools = toolsResult.tools.map((tool) => {
+          return {
+            name: tool.name,
+            description: tool.description,
+            input_schema: tool.inputSchema,
+          };
+        });
+        console.log(
+          "Connected to MCP server with tools:",
+          this.tools.map(({ name }) => name)
+        );
       }
-      const command = isPy
-        ? process.platform === "win32"
-          ? "python"
-          : "python3"
-        : process.execPath;
-  
-      this.transport = new StdioClientTransport({
-        command,
-        args: [serverScriptPath],
-      });
-      this.mcp.connect(this.transport);
-  
-      const toolsResult = await this.mcp.listTools();
-      this.tools = toolsResult.tools.map((tool) => {
-        return {
-          name: tool.name,
-          description: tool.description,
-          input_schema: tool.inputSchema,
-        };
-      });
-      console.log(
-        "Connected to server with tools:",
-        this.tools.map(({ name }) => name)
-      );
     } catch (e) {
       console.log("Failed to connect to MCP server: ", e);
       throw e;
