@@ -399,7 +399,11 @@ app.get('/api/databases', async (req, res) => {
       [rows] = await connection.execute('SHOW DATABASES');
       await connection.end();
     } else {
-      rows = await getDatabasesProd();
+      rows = await anyQuery({
+        prj: process.env.PRJ,
+        select: "*",
+        conditions: ["SHOW DATABASES"]
+      });
       console.log('rows:', rows);
     }
     if (!rows || rows.length === 0) {
