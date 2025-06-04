@@ -399,9 +399,8 @@ app.get('/api/databases', async (req, res) => {
       [rows] = await connection.execute('SHOW DATABASES');
       await connection.end();
     } else {
-      [rows] = await anyQuery({
-        tbl: 'SHOW DATABASES',
-        select: '*',
+      rows = await getDatabasesProd({
+
       });
     }
     if (!rows || rows.length === 0) {

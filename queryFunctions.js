@@ -106,7 +106,7 @@ export async function getDatabasesProd() {
     throw error;
   }
   try {
-    const response = await fetch(`${baseUrl}/getDatabases`, {
+    const response = await fetch(`${baseUrl}/databases`, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`
