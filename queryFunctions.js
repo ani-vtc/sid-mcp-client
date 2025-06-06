@@ -107,7 +107,7 @@ export async function getDatabasesProd() {
 
 export async function getTableNames(db) {
   const baseUrl = "https://backend-v1-1010920399604.northamerica-northeast2.run.app";
-  const idToken = await getIdentityToken();
+  const idToken = await googleAuth();
   const response = await fetch(`${baseUrl}/tableNames/${db}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export async function getTableNames(db) {
   });
   if (response.ok) {
     const result = await response.json();
-    console.log('result:', result);
+    console.log('Table result:', result);
     return result;
   } else {
     const errorText = await response.text();

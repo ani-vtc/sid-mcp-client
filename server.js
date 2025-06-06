@@ -361,10 +361,7 @@ app.get('/api/tableNames/:db', async (req, res) => {
       }
     } else {
       try {
-        rows = await anyQuery({
-          tbl: 'SHOW TABLES',
-          select: '*',
-        });
+        rows = await getTableNames(db);
       } catch (queryError) {
         console.error('Query execution error:', queryError);
         return res.status(500).json({ 
