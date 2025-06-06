@@ -14,7 +14,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { z } from "zod";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 dotenv.config();
-import { anyQuery, getDatabasesProd } from './queryFunctions.js';
+import { anyQuery, getDatabasesProd, getTableNames } from './queryFunctions.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
