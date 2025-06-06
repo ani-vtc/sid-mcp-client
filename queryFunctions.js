@@ -108,7 +108,7 @@ export async function getDatabasesProd() {
 export async function getTableNames(db) {
   const baseUrl = "https://backend-v1-1010920399604.northamerica-northeast2.run.app";
   const idToken = await googleAuth();
-  const response = await fetch(`${baseUrl}/tableNames/${db}`, {
+  const response = await fetch(`${baseUrl}/tables/${db}`, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
