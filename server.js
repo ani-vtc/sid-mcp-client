@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import { GoogleAuth } from 'google-auth-library';
 
 import { Anthropic } from '@anthropic-ai/sdk';
-
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { z } from "zod";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -399,7 +399,7 @@ app.get('/api/databases', async (req, res) => {
       [rows] = await connection.execute('SHOW DATABASES');
       await connection.end();
     } else {
-      [rows] = await getDatabasesProd();
+      rows = await getDatabasesProd();
       console.log('rows:', rows);
     }
     if (!rows || rows.length === 0) {
