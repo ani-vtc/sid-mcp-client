@@ -78,24 +78,15 @@ class MCPClient {
           this.tools.map(({ name }) => name)
         );
       } else {
+        const aud = 'https://sid-mcp-client-1010920399604.northamerica-northeast2.run.app';
+        const url = new URL('/mcp', aud);
         // Get Google Cloud credentials
         // This will automatically use the appropriate authentication method:
         // - On Cloud Run: Uses the service account attached to the Cloud Run service
         // - Locally: Uses GOOGLE_APPLICATION_CREDENTIALS if set
-        const client = await this.googleAuth.getClient();
-        const token = await client.getAccessToken();
-        console.log('MCP_SERVER_URL value:', process.env.MCP_SERVER_URL);
-        console.log('MCP_SERVER_URL type:', typeof process.env.MCP_SERVER_URL);
-        console.log('MCP_SERVER_URL length:', process.env.MCP_SERVER_URL.length);
-        console.log('MCP_SERVER_URL first 10 chars:', process.env.MCP_SERVER_URL.substring(0, 10));
-        let url;
-        try {
-            url = new URL('/mcp', 'https://sid-mcp-client-1010920399604.northamerica-northeast2.run.app');
-            console.log('url:', url);
-        } catch (error) {
-            console.error('URL parsing error:', error.message);
-            console.error('Full error:', error);
-        }
+        const client = await this.googleAuth.getIdTokenClient(aud);
+        const token = await client.request({url: url.href});
+
         this.transport = new StreamableHTTPClientTransport({
           url: url.href,
           opts: {
