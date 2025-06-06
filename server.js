@@ -87,7 +87,7 @@ class MCPClient {
         const url = process.env.MCP_SERVER_URL;
         console.log('url:', url);
         this.transport = new StreamableHTTPClientTransport({
-          url: url,
+          url: url.toString(),
           opts: {
             headers: {
               'Authorization': `Bearer ${token.token}`,
