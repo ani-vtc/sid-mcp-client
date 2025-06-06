@@ -341,13 +341,14 @@ app.get('/api/tableNames/:db', async (req, res) => {
       return res.status(400).json({ error: 'Database name is required' });
     }
 
-    // Set the database in the config
-    dbConfig.database = db;
-    console.log('Database config:', { ...dbConfig, password: '***' });
+
 
     let rows;
     if (process.env.ENV == "dev") {
       try {
+        // Set the database in the config
+        dbConfig.database = db;   
+        console.log('Database config:', { ...dbConfig, password: '***' });
         const connection = await mysql.createConnection(dbConfig);
         [rows] = await connection.execute('SHOW TABLES');
         await connection.end();
@@ -360,7 +361,7 @@ app.get('/api/tableNames/:db', async (req, res) => {
       }
     } else {
       try {
-        [rows] = await anyQuery({
+        rows = await anyQuery({
           tbl: 'SHOW TABLES',
           select: '*',
         });
