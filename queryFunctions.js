@@ -79,6 +79,8 @@ export async function anyQuery({
 }
 
 export async function getDatabasesProd() {
+  // Base API configuration
+  const baseUrl = "https://backend-v1-1010920399604.northamerica-northeast2.run.app";
 
   const idToken = await googleAuth();
   try {
