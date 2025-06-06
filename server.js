@@ -88,8 +88,9 @@ class MCPClient {
         console.log('MCP_SERVER_URL type:', typeof process.env.MCP_SERVER_URL);
         console.log('MCP_SERVER_URL length:', process.env.MCP_SERVER_URL.length);
         console.log('MCP_SERVER_URL first 10 chars:', process.env.MCP_SERVER_URL.substring(0, 10));
+        let url;
         try {
-            const url = new URL(process.env.MCP_SERVER_URL);
+            url = new URL(process.env.MCP_SERVER_URL);
             console.log('url:', url);
         } catch (error) {
             console.error('URL parsing error:', error.message);
