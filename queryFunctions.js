@@ -112,9 +112,9 @@ export async function getDatabasesProd() {
         'Authorization': `Bearer ${idToken}`
       }
     });
-    console.log('response:', await response.json());
     if (response.ok) {
       const result = await response.json();
+      console.log('result:', result);
       return result;
     } else {
       const errorText = await response.text();
