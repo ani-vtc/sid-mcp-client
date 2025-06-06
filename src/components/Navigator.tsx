@@ -28,6 +28,7 @@ const Navigator = () => {
                 const data = await res.json();
                 console.log('data:', data);
                 const dbNames = data.map((row: any) => Object.values(row)[0]);
+                console.log('dbNames:', dbNames);
                 setDatabases(dbNames);
                 if (dbNames.length > 0) setSelectedDb(dbNames[0]);
             } catch (error) {
