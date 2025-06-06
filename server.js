@@ -86,8 +86,15 @@ class MCPClient {
         const token = await client.getAccessToken();
         console.log('MCP_SERVER_URL value:', process.env.MCP_SERVER_URL);
         console.log('MCP_SERVER_URL type:', typeof process.env.MCP_SERVER_URL);
-        const url = new URL(process.env.MCP_SERVER_URL);
-        console.log('url:', url);
+        console.log('MCP_SERVER_URL length:', process.env.MCP_SERVER_URL.length);
+        console.log('MCP_SERVER_URL first 10 chars:', process.env.MCP_SERVER_URL.substring(0, 10));
+        try {
+            const url = new URL(process.env.MCP_SERVER_URL);
+            console.log('url:', url);
+        } catch (error) {
+            console.error('URL parsing error:', error.message);
+            console.error('Full error:', error);
+        }
         this.transport = new StreamableHTTPClientTransport({
           url: url,
           opts: {
