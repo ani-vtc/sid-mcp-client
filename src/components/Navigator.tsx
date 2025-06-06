@@ -26,6 +26,7 @@ const Navigator = () => {
             try {
                 const res = await fetch(window.location.hostname === "localhost" ? "http://localhost:5051/api/databases" : "/api/databases");
                 const data = await res.json();
+                console.log('data:', data);
                 const dbNames = data.map((row: any) => Object.values(row)[0]);
                 setDatabases(dbNames);
                 if (dbNames.length > 0) setSelectedDb(dbNames[0]);
