@@ -78,7 +78,7 @@ class MCPClient {
           this.tools.map(({ name }) => name)
         );
       } else {
-        const aud = 'https://sid-mcp-client-1010920399604.northamerica-northeast2.run.app';
+        const aud = 'https://sid-mcp-1010920399604.northamerica-northeast2.run.app';
         const url = new URL('/mcp', aud);
         // Get Google Cloud credentials
         // This will automatically use the appropriate authentication method:
