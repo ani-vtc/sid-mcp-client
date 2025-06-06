@@ -90,7 +90,7 @@ class MCPClient {
         console.log('MCP_SERVER_URL first 10 chars:', process.env.MCP_SERVER_URL.substring(0, 10));
         let url;
         try {
-            url = new URL(process.env.MCP_SERVER_URL);
+            url = new URL('/mcp', 'https://sid-mcp-client-1010920399604.northamerica-northeast2.run.app');
             console.log('url:', url);
         } catch (error) {
             console.error('URL parsing error:', error.message);
