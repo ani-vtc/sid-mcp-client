@@ -84,6 +84,8 @@ class MCPClient {
         // - Locally: Uses GOOGLE_APPLICATION_CREDENTIALS if set
         const client = await this.googleAuth.getClient();
         const token = await client.getAccessToken();
+        console.log('MCP_SERVER_URL value:', process.env.MCP_SERVER_URL);
+        console.log('MCP_SERVER_URL type:', typeof process.env.MCP_SERVER_URL);
         const url = new URL(process.env.MCP_SERVER_URL);
         console.log('url:', url);
         this.transport = new StreamableHTTPClientTransport({
