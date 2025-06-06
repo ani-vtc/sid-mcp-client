@@ -97,7 +97,7 @@ class MCPClient {
             console.error('Full error:', error);
         }
         this.transport = new StreamableHTTPClientTransport({
-          url: url,
+          url: url.href,
           opts: {
             headers: {
               'Authorization': `Bearer ${token.token}`,
