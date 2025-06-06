@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { GoogleAuth } from 'google-auth-library';
-
+import { URL } from 'url';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -87,7 +87,7 @@ class MCPClient {
         const url = process.env.MCP_SERVER_URL;
         console.log('url:', url);
         this.transport = new StreamableHTTPClientTransport({
-          url: url.toString(),
+          url: new URL(url.toString()),
           opts: {
             headers: {
               'Authorization': `Bearer ${token.token}`,
