@@ -91,7 +91,7 @@ class MCPClient {
           url: url.href,
           opts: {
             headers: {
-              'Authorization': `Bearer ${token.token}`,
+              'Authorization': `Bearer ${token.data}`,
             },
           },
         });
