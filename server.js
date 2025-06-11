@@ -117,14 +117,22 @@ class MCPClient {
           }
         }
 
-        this.transport = new StreamableHTTPClientTransport({
-          url: url.href,
-          opts: {
+        // Debug logging to identify the issue
+        console.log('Debug - URL object:', url);
+        console.log('Debug - URL href:', url.href);
+        console.log('Debug - URL href type:', typeof url.href);
+        console.log('Debug - Token type:', typeof token);
+        console.log('Debug - Token length:', token.length);
+
+        // Try the correct constructor format based on the TypeScript SDK documentation
+        this.transport = new StreamableHTTPClientTransport(
+          url.href,
+          {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
-          },
-        });
+          }
+        );
         await this.mcp.connect(this.transport);
 
         const toolsResult = await this.mcp.listTools();
