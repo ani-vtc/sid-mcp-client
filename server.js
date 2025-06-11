@@ -124,15 +124,67 @@ class MCPClient {
         console.log('Debug - Token type:', typeof token);
         console.log('Debug - Token length:', token.length);
 
-        // Try the correct constructor format based on the TypeScript SDK documentation
-        this.transport = new StreamableHTTPClientTransport(
-          url.href,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          }
-        );
+        // Create a custom fetch function that includes authentication
+        const authenticatedFetch = async (input, init = {}) => {
+          const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            ...(init.headers || {})
+          };
+          
+          return fetch(input, {
+            ...init,
+            headers
+          });
+        };
+
+        // Store original fetch in case we need to override globally
+        const originalFetch = global.fetch;
+
+        // Try Method 1: Custom fetch function
+        try {
+          this.transport = new StreamableHTTPClientTransport(
+            url.href,
+            {
+              fetch: authenticatedFetch
+            }
+          );
+          console.log('Using custom fetch function for authentication');
+        } catch (fetchError) {
+          console.log('Custom fetch method failed, trying alternative approach:', fetchError.message);
+          
+          // Method 2: Try with requestInit option (alternative parameter structure)
+          try {
+            this.transport = new StreamableHTTPClientTransport(
+              url.href,
+              {
+                requestInit: {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  }
+                }
+              }
+            );
+            console.log('Using requestInit for authentication');
+          } catch (requestInitError) {
+            console.log('RequestInit method failed, trying basic constructor:', requestInitError.message);
+            
+                         // Method 3: Basic constructor with global fetch override
+             console.log('Trying global fetch override method');
+             
+             // Temporarily override global fetch
+             global.fetch = authenticatedFetch;
+             
+             try {
+               this.transport = new StreamableHTTPClientTransport(url.href);
+               console.log('Using basic constructor with global fetch override');
+             } finally {
+               // Restore original fetch after transport creation
+               global.fetch = originalFetch;
+             }
+           }
+         }
         await this.mcp.connect(this.transport);
 
         const toolsResult = await this.mcp.listTools();
