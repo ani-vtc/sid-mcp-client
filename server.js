@@ -150,6 +150,7 @@ class MCPClient {
             }
           );
           console.log('Using custom fetch function for authentication');
+          await this.mcp.connect(this.transport);
         } catch (fetchError) {
           console.log('Custom fetch method failed, trying alternative approach:', fetchError.message);
           
@@ -167,6 +168,7 @@ class MCPClient {
               }
             );
             console.log('Using requestInit for authentication');
+            await this.mcp.connect(this.transport);
           } catch (requestInitError) {
             console.log('RequestInit method failed, trying basic constructor:', requestInitError.message);
             
@@ -183,9 +185,10 @@ class MCPClient {
                // Restore original fetch after transport creation
                global.fetch = originalFetch;
              }
+             await this.mcp.connect(this.transport);
            }
          }
-        await this.mcp.connect(this.transport);
+        
 
         const toolsResult = await this.mcp.listTools();
         this.tools = toolsResult.tools.map((tool) => {
