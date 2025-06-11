@@ -80,18 +80,48 @@ class MCPClient {
       } else {
         const aud = 'https://sid-mcp-1010920399604.northamerica-northeast2.run.app';
         const url = new URL('/mcp', aud);
-        // Get Google Cloud credentials
-        // This will automatically use the appropriate authentication method:
-        // - On Cloud Run: Uses the service account attached to the Cloud Run service
-        // - Locally: Uses GOOGLE_APPLICATION_CREDENTIALS if set
-        const client = await this.googleAuth.getIdTokenClient(aud);
-        const token = await client.request({url: url.href});
+        
+        let token;
+        try {
+          // Method 1: Try using the metadata server (recommended for Cloud Run)
+          // This is the preferred method when running on Cloud Run
+          const metadataResponse = await fetch(
+            `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=${encodeURIComponent(aud)}`,
+            {
+              headers: {
+                'Metadata-Flavor': 'Google'
+              }
+            }
+          );
+          
+          if (metadataResponse.ok) {
+            token = await metadataResponse.text();
+            console.log('Successfully obtained ID token from metadata server');
+          } else {
+            throw new Error(`Metadata server responded with status: ${metadataResponse.status}`);
+          }
+        } catch (metadataError) {
+          console.log('Metadata server not available, falling back to Google Auth library:', metadataError.message);
+          
+          // Method 2: Fallback to Google Auth library (for local development)
+          try {
+            const client = await this.googleAuth.getIdTokenClient(aud);
+            token = await client.fetchIdToken(aud);
+            console.log('Successfully obtained ID token from Google Auth library');
+          } catch (authError) {
+            console.error('Both metadata server and Google Auth library failed:', {
+              metadataError: metadataError.message,
+              authError: authError.message
+            });
+            throw new Error('Failed to obtain authentication token');
+          }
+        }
 
         this.transport = new StreamableHTTPClientTransport({
           url: url.href,
           opts: {
             headers: {
-              'Authorization': `Bearer ${token.data}`,
+              'Authorization': `Bearer ${token}`,
             },
           },
         });
