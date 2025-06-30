@@ -172,7 +172,7 @@ class MCPClient {
           } catch (requestInitError) {
             console.log('RequestInit method failed, trying basic constructor:', requestInitError.message);
             
-                         // Method 3: Basic constructor with global fetch override
+             // Method 3: Basic constructor with global fetch override
              console.log('Trying global fetch override method');
              
              // Temporarily override global fetch
@@ -227,40 +227,77 @@ class MCPClient {
     const finalText = [];
     const toolResults = [];
   
-    for (const content of response.content) {
-      if (content.type === "text") {
-        finalText.push(content.text);
-      } else if (content.type === "tool_use") {
+    console.log("response.content:", response.content);
+    if (response.content && response.content.some(content => content.type === "tool_use")) {
+      for (const content of response.content.filter(content => content.type === "tool_use")) {
         const toolName = content.name;
         const toolArgs = content.input;
-  
         const result = await this.mcp.callTool({
-          name: toolName,
-          arguments: toolArgs,
-        });
+                name: toolName,
+                arguments: toolArgs,
+              });
         toolResults.push(result);
         finalText.push(
           `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
         );
-  
+        
         messages.push({
           role: "user",
           content: result.content ,
         });
-  
+
         const response = await this.anthropic.messages.create({
           model: "claude-3-5-sonnet-20241022",
           max_tokens: 1000,
           messages,
         });
-  
+
         finalText.push(
           response.content[0].type === "text" ? response.content[0].text : ""
         );
+
       }
+    } else {
+      finalText.push(
+        response.content[0].type === "text" ? response.content[0].text : ""
+      );
     }
-  
+
     return finalText.join("\n");
+    // for (const content of response.content) {
+    //   if (content.type === "text") {
+    //     finalText.push(content.text);
+    //   } else if (content.type === "tool_use") {
+    //     const toolName = content.name;
+    //     const toolArgs = content.input;
+  
+    //     const result = await this.mcp.callTool({
+    //       name: toolName,
+    //       arguments: toolArgs,
+    //     });
+    //     toolResults.push(result);
+    //     finalText.push(
+    //       `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
+    //     );
+  
+    //     messages.push({
+    //       role: "user",
+    //       content: result.content ,
+    //     });
+  
+    //     const response = await this.anthropic.messages.create({
+    //       model: "claude-3-5-sonnet-20241022",
+    //       max_tokens: 1000,
+    //       messages,
+    //     });
+  
+    //     finalText.push(
+    //       response.content[0].type === "text" ? response.content[0].text : ""
+    //     );
+    //   }
+    // }
+  
+    
   }
 }
 
