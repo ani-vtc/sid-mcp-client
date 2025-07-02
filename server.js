@@ -21,6 +21,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+flags = {
+  databaseChanged: {value: false, database: null}
+}
+
 class MCPClient {
 
   constructor() {
@@ -228,76 +232,45 @@ class MCPClient {
     const toolResults = [];
   
     console.log("response.content:", response.content);
-    if (response.content && response.content.some(content => content.type === "tool_use")) {
-      for (const content of response.content.filter(content => content.type === "tool_use")) {
+
+   
+    for (const content of response.content) {
+      if (content.type === "text") {
+        finalText.push(content.text);
+      } else if (content.type === "tool_use") {
         const toolName = content.name;
         const toolArgs = content.input;
+  
         const result = await this.mcp.callTool({
-                name: toolName,
-                arguments: toolArgs,
-              });
+          name: toolName,
+          arguments: toolArgs,
+        });
+        if (toolName === "changeDatabase") {
+          setCurrentDatabase(toolArgs.database);
+        }
         toolResults.push(result);
         finalText.push(
           `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
         );
-        
+  
         messages.push({
           role: "user",
           content: result.content ,
         });
-
+  
         const response = await this.anthropic.messages.create({
           model: "claude-3-5-sonnet-20241022",
           max_tokens: 1000,
           messages,
         });
-
+  
         finalText.push(
           response.content[0].type === "text" ? response.content[0].text : ""
         );
-
       }
-    } else {
-      finalText.push(
-        response.content[0].type === "text" ? response.content[0].text : ""
-      );
     }
-
-    return finalText.join("\n");
-    // for (const content of response.content) {
-    //   if (content.type === "text") {
-    //     finalText.push(content.text);
-    //   } else if (content.type === "tool_use") {
-    //     const toolName = content.name;
-    //     const toolArgs = content.input;
   
-    //     const result = await this.mcp.callTool({
-    //       name: toolName,
-    //       arguments: toolArgs,
-    //     });
-    //     toolResults.push(result);
-    //     finalText.push(
-    //       `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
-    //     );
-  
-    //     messages.push({
-    //       role: "user",
-    //       content: result.content ,
-    //     });
-  
-    //     const response = await this.anthropic.messages.create({
-    //       model: "claude-3-5-sonnet-20241022",
-    //       max_tokens: 1000,
-    //       messages,
-    //     });
-  
-    //     finalText.push(
-    //       response.content[0].type === "text" ? response.content[0].text : ""
-    //     );
-    //   }
-    // }
-  
-    
+    return {finalText: finalText.join("\n"), flags: flags};
   }
 }
 
@@ -314,7 +287,13 @@ const dbConfig = {
     database: null,
   };
   
-  
+
+app.get('/api/state/setDatabase/:database', async (req, res) => {
+  const { database } = req.params;
+  setCurrentDatabase(database);
+  res.json({ message: 'Database set successfully' });
+});
+
 //Get rows from table with pagination, sorting, and filtering 
 // @param table: string - The name of the table to get rows from
 // @param page: number - The page number to get
@@ -649,6 +628,12 @@ app.listen(PORT, async () => {
   }
 });
 
+// HELPER FUNCTIONS
+
+function setCurrentDatabase(database) {
+  flags.databaseChanged.value = true;
+  flags.databaseChanged.database = database;
+}
 
 
 

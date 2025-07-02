@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-
 interface Message {
   text: string;
   isUser: boolean;
 }
+
 
 // Add type declaration for window.handleDatabaseChange
 declare global {
@@ -38,49 +38,17 @@ const Chatbot: React.FC = () => {
       if (!response.ok) {
         throw new Error('Failed to get response');
       }
-
+      
       const data = await response.json();
+      const flags = data.flags;
+
+      if (flags.databaseChanged.value) {
+        window.handleDatabaseChange?.(flags.databaseChanged.database);
+      }
       console.log('Response:', data.response);
       
-      // Check if this is a database change command
-      try {
-        const parsedResponse = JSON.parse(data.response);
-        if (parsedResponse.type === 'DATABASE_CHANGE') {
-          // Call the window function to change the database
-          if (window.handleDatabaseChange) {
-            const success = window.handleDatabaseChange(parsedResponse.database);
-            if (success) {
-              // Add success message
-              const botMessage: Message = { 
-                text: `Successfully changed database to ${parsedResponse.database}`, 
-                isUser: false 
-              };
-              setMessages(prev => [...prev, botMessage]);
-            } else {
-              // Add error message
-              const botMessage: Message = { 
-                text: `Failed to change database to ${parsedResponse.database}`, 
-                isUser: false 
-              };
-              setMessages(prev => [...prev, botMessage]);
-            }
-          } else {
-            // Add error message
-            const botMessage: Message = { 
-              text: 'Database change function not available', 
-              isUser: false 
-            };
-            setMessages(prev => [...prev, botMessage]);
-          }
-          return;
-        }
-      } catch (e) {
-        // If response isn't JSON or doesn't have the expected format, handle as normal message
-        console.log('Response is not a database change command:', e);
-      }
-      
       // Add bot response for normal messages
-      const botMessage: Message = { text: data.response, isUser: false };
+      const botMessage: Message = { text: data.response.finalText, isUser: false };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error:', error);
