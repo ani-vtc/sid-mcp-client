@@ -40,7 +40,7 @@ const Chatbot: React.FC = () => {
       }
       
       const data = await response.json();
-      const flags = data.flags;
+      const flags = data.response.flags;
       console.log('chatbot tsx data: ', data);
       if (flags.databaseChanged.value) {
         window.handleDatabaseChange?.(flags.databaseChanged.database);
