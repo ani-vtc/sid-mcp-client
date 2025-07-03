@@ -41,7 +41,7 @@ const Chatbot: React.FC = () => {
       
       const data = await response.json();
       const flags = data.flags;
-
+      console.log('flags: ', flags);
       if (flags.databaseChanged.value) {
         window.handleDatabaseChange?.(flags.databaseChanged.database);
       }
