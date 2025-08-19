@@ -243,8 +243,9 @@ class MCPClient {
   
         const result = await this.mcp.callTool({
           name: toolName,
-          arguments: toolArgs,
+          arguments: toolArgs, 
         });
+        //TODO add more flags
         if (toolName === "changeDatabase") {
           setCurrentDatabase(toolArgs.database);
         }
@@ -273,11 +274,6 @@ class MCPClient {
     return {finalText: finalText.join("\n"), flags: flags};
   }
 }
-
-const client = new Client({
-  name: "SID-Client",
-  version: "1.0.0",
-});
 
 //Db config for cloud run/local
 const dbConfig = {
@@ -415,7 +411,7 @@ app.get('/api/rows/:table/:page/:pageSize', async (req, res) => {
       
       // Get paginated data
       [rows] = await anyQuery({
-        tbl: dataQuery,
+        raw: dataQuery,
         select: '*',
         params: [...filterParams, limit, offset]
       });
@@ -520,62 +516,6 @@ app.get('/api/databases', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch databases', details: error.message });
   }
 });
-
-// Message processing function with MCP integration
-async function processMessage(messages) {
-  try {
-    // Debug: Check what tools are being converted
-    const convertedTools = mcpToTool(client);
-    //console.log("Tools being passed to Gemini:", JSON.stringify(convertedTools, null, 2));
-    
-    let chat;
-    if (!chat) {
-      chat = await genAI.chats.create({
-        model: "gemini-2.5-flash-preview-05-20",
-        history: messages.slice(0, messages.length - 1).map( msg => {
-          return { 
-            role: msg.isUser ? "user" : "model",
-            parts: [{ text: msg.text }]
-          }
-        }),
-        config: {
-          temperature: 0.5,
-          tools: [convertedTools],
-          automaticFunctionCalling: {
-            disable: true,
-          }
-        }
-      })
-    }
-    const response = await chat.sendMessage({
-      message: messages[messages.length - 1].text,
-    });
-    console.log('history:', chat.getHistory());
-    console.log('text:', response.text);
-
-    // Parse the response to check for database change action
-    try {
-      const parsedResponse = JSON.parse(response.text);
-      console.log('parsedResponse:', parsedResponse);
-      if (parsedResponse.action === 'CHANGE_DATABASE' && parsedResponse.database) {
-        // Send a special response that the frontend can handle
-        return JSON.stringify({
-          type: 'DATABASE_CHANGE',
-          database: parsedResponse.database,
-          message: parsedResponse.message
-        });
-      }
-    } catch (e) {
-      // If response isn't JSON or doesn't have the expected format, return as normal
-      console.log('Response is not a database change command:', e);
-    }
-
-    return response.text;
-  } catch (error) {
-    console.error('Error processing message:', error);
-    throw error;
-  }
-}
 
 // Chat endpoint for LLM interactions
 app.post('/api/chat', async (req, res) => {

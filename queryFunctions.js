@@ -13,7 +13,8 @@ export async function anyQuery({
   ds = "schools",
   tbl = "",
   select = "*",
-  conditions = []
+  conditions = [],
+  rawQuery = null
 } = {}) {
   try {
     // Base API configuration
@@ -43,7 +44,7 @@ export async function anyQuery({
     }
 
     // Prepare the query
-    const query = `SELECT ${select} FROM ${tbl} ${conditions.join(" ")};`;
+    const query = rawQuery ? rawQuery : `SELECT ${select} FROM ${tbl} ${conditions.join(" ")};`;
     
     // Prepare the request body
     const body = {
@@ -70,6 +71,7 @@ export async function anyQuery({
     } else {
       const errorText = await apiResponse.text();
       console.error(`API request failed: ${errorText}`);
+      console.error('Failed query:', query);
       throw new Error(`API request failed: ${apiResponse.status} ${apiResponse.statusText}`);
     }
   } catch (error) {
