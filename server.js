@@ -404,14 +404,14 @@ app.get('/api/rows/:table/:page/:pageSize', async (req, res) => {
     } else {
       // Get total count
       [totalCount] = await anyQuery({
-        tbl: countQuery,
+        rawQuery: `${countQuery} ${filterParams.join(" ")}`,
         select: '*',
         params: filterParams
       });
       
       // Get paginated data
       [rows] = await anyQuery({
-        raw: dataQuery,
+        tbl: dataQuery,
         select: '*',
         params: [...filterParams, limit, offset]
       });
